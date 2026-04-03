@@ -1,0 +1,14 @@
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\bin\Debug\net10.0\MinhaLoja.Core.deps.json
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\bin\Debug\net10.0\MinhaLoja.Core.runtimeconfig.json
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\bin\Debug\net10.0\MinhaLoja.Core.dll
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\bin\Debug\net10.0\MinhaLoja.Core.pdb
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\MinhaLoja.Core.csproj.AssemblyReference.cache
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\MinhaLoja.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\MinhaLoja.Core.AssemblyInfoInputs.cache
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\MinhaLoja.Core.AssemblyInfo.cs
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\MinhaLoja.Core.csproj.CoreCompileInputs.cache
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\MinhaLoja.Core.dll
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\refint\MinhaLoja.Core.dll
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\MinhaLoja.Core.pdb
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\MinhaLoja.Core.genruntimeconfig.cache
+C:\Users\araga\MinhaLojaVirtual\MinhaLoja.Core\obj\Debug\net10.0\ref\MinhaLoja.Core.dll
