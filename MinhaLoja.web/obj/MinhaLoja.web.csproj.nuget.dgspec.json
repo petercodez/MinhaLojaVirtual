@@ -351,6 +351,11 @@
             "System.Xml.XPath.XDocument": "(,5.0.32767]"
           }
         }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
+        }
       }
     },
     "C:\\Users\\araga\\MinhaLojaVirtual\\MinhaLoja.Web\\MinhaLoja.web.csproj": {
