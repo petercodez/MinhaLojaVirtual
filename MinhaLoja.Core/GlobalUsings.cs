@@ -1,0 +1,4 @@
+// Arquivo: GlobalUsings.cs no projeto LojaVirtual.Core
+
+global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel.DataAnnotations.Schema;

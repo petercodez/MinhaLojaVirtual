@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using MinhaLoja.Core.Models;
+using System.Text.Json.Serialization;
 
 namespace MinhaLoja.Core.Models
 {
@@ -21,6 +23,8 @@ namespace MinhaLoja.Core.Models
         public string Slug { get; set; } = string.Empty;
         public string? Descricao { get; set; } = string.Empty;
 
+        // Propriedade de Navegação: Uma Categoria tem muitos Produtos (1:N)
+        [JsonIgnore] // Isso impede que a lista de produtos apareça "dentro" da categoria no JSON
         public ICollection<Produto> Produtos { get; set; } = new List<Produto>();
     }
 }
