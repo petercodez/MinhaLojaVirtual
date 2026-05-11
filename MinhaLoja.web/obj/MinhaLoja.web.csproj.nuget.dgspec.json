@@ -1,7 +1,7 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.web\\MinhaLoja.web.csproj": {}
+    "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.Web\\MinhaLoja.web.csproj": {}
   },
   "projects": {
     "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.Core\\MinhaLoja.Core.csproj": {
@@ -364,14 +364,14 @@
         }
       }
     },
-    "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.web\\MinhaLoja.web.csproj": {
+    "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.Web\\MinhaLoja.web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.web\\MinhaLoja.web.csproj",
+        "projectUniqueName": "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.Web\\MinhaLoja.web.csproj",
         "projectName": "MinhaLoja.web",
-        "projectPath": "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.web\\MinhaLoja.web.csproj",
+        "projectPath": "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.Web\\MinhaLoja.web.csproj",
         "packagesPath": "C:\\Users\\pedro\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.web\\obj\\",
+        "outputPath": "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.Web\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

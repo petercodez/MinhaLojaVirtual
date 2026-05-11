@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "eEhk1z8h/8I=",
+  "dgSpecHash": "mKXtOwhdOG0=",
   "success": true,
-  "projectFilePath": "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.web\\MinhaLoja.web.csproj",
+  "projectFilePath": "C:\\Users\\pedro\\OneDrive\\Área de Trabalho\\MinhaLojaVirtual\\MinhaLoja.Web\\MinhaLoja.web.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\pedro\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\pedro\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.5\\microsoft.aspnetcore.app.internal.assets.10.0.5.nupkg.sha512",
