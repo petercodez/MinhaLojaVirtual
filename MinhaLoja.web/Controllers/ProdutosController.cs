@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MinhaLoja.Core.Data;
 using MinhaLoja.Core.Models;
+using MinhaLoja.Core.DTOs;
 
 
 namespace MinhaLoja.Web.Controllers;
@@ -21,50 +22,94 @@ public class ProdutosController : ControllerBase
         _context = context;
     }
 
-    // GET: api/produtos
+    // 1. READ (GET) - Retorna a lista de produtos limpa
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Produto>>> GetProdutos()
+    public async Task<ActionResult<IEnumerable<ProdutoReadDTO>>> GetProdutos()
     {
-        // O Include traz os dados da Categoria junto com o Produto
-        return await _context.Produtos
+        var produtos = await _context.Produtos
             .Include(p => p.Categoria)
             .ToListAsync();
+
+        // Mapeamento: Model -> DTO
+        var produtosDTO = produtos.Select(p => new ProdutoReadDTO
+        {
+            Id = p.Id,
+            Nome = p.Nome,
+            Descricao = p.Descricao,
+            Preco = p.Preco,
+            CategoriaNome = p.Categoria != null ? p.Categoria.Nome : "Sem Categoria"
+        }).ToList();
+
+        return Ok(produtosDTO);
     }
 
-    // GET: api/produtos/5
+    // 2. READ (GET por ID) - Retorna apenas um produto limpo
     [HttpGet("{id}")]
-    public async Task<ActionResult<Produto>> GetProduto(int id)
+    public async Task<ActionResult<ProdutoReadDTO>> GetProduto(int id)
     {
         var produto = await _context.Produtos
             .Include(p => p.Categoria)
             .FirstOrDefaultAsync(p => p.Id == id);
 
-        if (produto == null)
-        {
-            return NotFound();
-        }
+        if (produto == null) return NotFound();
 
-        return produto;
+        // Mapeamento: Model -> DTO
+        var produtoDTO = new ProdutoReadDTO
+        {
+            Id = produto.Id,
+            Nome = produto.Nome,
+            Descricao = produto.Descricao,
+            Preco = produto.Preco,
+            CategoriaNome = produto.Categoria != null ? produto.Categoria.Nome : "Sem Categoria"
+        };
+
+        return Ok(produtoDTO);
     }
 
-    // POST: api/produtos
+    // 3. CREATE (POST) - Recebe o DTO, salva o Model, retorna o DTO
     [HttpPost]
-    public async Task<ActionResult<Produto>> PostProduto(Produto produto)
+    public async Task<ActionResult<ProdutoReadDTO>> PostProduto(ProdutoCreateDTO dto)
     {
+        // Mapeamento de Entrada: DTO -> Model
+        var produto = new Produto
+        {
+            Nome = dto.Nome,
+            Descricao = dto.Descricao,
+            Preco = dto.Preco,
+            CategoriaId = dto.CategoriaId
+        };
+
         _context.Produtos.Add(produto);
         await _context.SaveChangesAsync();
 
-        // Retorna o produto criado e o link para acessá-lo (boa prática de API REST)
-        return CreatedAtAction(nameof(GetProduto), new { id = produto.Id }, produto);
+        // Carrega os dados da Categoria do banco para podermos retornar o Nome dela
+        await _context.Entry(produto).Reference(p => p.Categoria).LoadAsync();
+
+        // Mapeamento de Saída: Model -> DTO
+        var retorno = new ProdutoReadDTO 
+        { 
+            Id = produto.Id, 
+            Nome = produto.Nome,
+            Descricao = produto.Descricao,
+            Preco = produto.Preco,
+            CategoriaNome = produto.Categoria != null ? produto.Categoria.Nome : "Sem Categoria"
+        };
+
+        return CreatedAtAction(nameof(GetProduto), new { id = produto.Id }, retorno);
     }
 
-    // PUT: api/produtos/5
+    // 4. UPDATE (PUT) - Atualiza os dados usando o DTO
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutProduto(int id, Produto produto)
+    public async Task<IActionResult> PutProduto(int id, ProdutoCreateDTO dto)
     {
-        if (id != produto.Id) return BadRequest();
+        var produto = await _context.Produtos.FindAsync(id);
+        if (produto == null) return NotFound();
 
-        _context.Entry(produto).State = EntityState.Modified;
+        // Atualizamos o Model existente com os dados novos do DTO
+        produto.Nome = dto.Nome;
+        produto.Descricao = dto.Descricao;
+        produto.Preco = dto.Preco;
+        produto.CategoriaId = dto.CategoriaId;
 
         try
         {
@@ -75,11 +120,11 @@ public class ProdutosController : ControllerBase
             if (!_context.Produtos.Any(e => e.Id == id)) return NotFound();
             else throw;
         }
-        
-        return NoContent();
+
+        return NoContent(); // 204 NoContent é o padrão de sucesso para PUT
     }
 
-    // DELETE: api/produtos/5
+    // 5. DELETE - Remove do banco
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduto(int id)
     {
@@ -89,6 +134,6 @@ public class ProdutosController : ControllerBase
         _context.Produtos.Remove(produto);
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return NoContent(); // 204 NoContent é o padrão de sucesso para DELETE
     }
 }
