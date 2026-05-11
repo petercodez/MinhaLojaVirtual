@@ -21,6 +21,11 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Isso permite que o Blazor chame a si mesmo (a API)
+builder.Services.AddScoped(sp => new HttpClient { 
+    BaseAddress = new Uri("https://localhost:5269/") // Ajuste para a sua porta real
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
