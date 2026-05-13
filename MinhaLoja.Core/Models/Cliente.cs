@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using System.Text;
 
+
 namespace MinhaLoja.Core.Models
 {
     public class Cliente
@@ -29,12 +30,12 @@ namespace MinhaLoja.Core.Models
         [StringLength(250)]
         public string EnderecoCompleto { get; set; } = string.Empty;
 
-        // Chave Estrangeira para Usuario (1:1)
+        // Chave Estrangeira para o IdentityUser (1:1)
         [Required]
-        public int UsuarioId { get; set; }
+        public string UsuarioId { get; set; } = string.Empty; // <-- Mudou de int para string!
 
         [ForeignKey(nameof(UsuarioId))]
-        public Usuario Usuario{ get; set; } = null!;
+        public IdentityUser Usuario { get; set; } = null!; // <-- Mudou de Usuario para IdentityUser!
 
         // Propriedade de Navegação: Um Cliente pode ter muitos pedidos (1:N)
         public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
