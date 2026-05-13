@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using MinhaLoja.Core.Data;
 using MinhaLoja.Core.Models;
 using MinhaLoja.Core.DTOs;
 
-
 namespace MinhaLoja.Web.Controllers;
 
+[Authorize] // <-- ESTA É A FECHADURA! Qualquer requisição sem token será barrada.
 [ApiController]
 [Route("api/[controller]")]
 public class ProdutosController : ControllerBase
@@ -22,7 +19,7 @@ public class ProdutosController : ControllerBase
         _context = context;
     }
 
-    // 1. READ (GET) - Retorna a lista de produtos limpa
+    // READ (GET) - Retorna a lista de produtos limpa
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProdutoReadDTO>>> GetProdutos()
     {
@@ -43,7 +40,7 @@ public class ProdutosController : ControllerBase
         return Ok(produtosDTO);
     }
 
-    // 2. READ (GET por ID) - Retorna apenas um produto limpo
+    // READ (GET por ID) - Retorna apenas um produto limpo
     [HttpGet("{id}")]
     public async Task<ActionResult<ProdutoReadDTO>> GetProduto(int id)
     {
@@ -66,7 +63,7 @@ public class ProdutosController : ControllerBase
         return Ok(produtoDTO);
     }
 
-    // 3. CREATE (POST) - Recebe o DTO, salva o Model, retorna o DTO
+    // CREATE (POST) - Recebe o DTO, salva o Model, retorna o DTO
     [HttpPost]
     public async Task<ActionResult<ProdutoReadDTO>> PostProduto(ProdutoCreateDTO dto)
     {
@@ -98,7 +95,7 @@ public class ProdutosController : ControllerBase
         return CreatedAtAction(nameof(GetProduto), new { id = produto.Id }, retorno);
     }
 
-    // 4. UPDATE (PUT) - Atualiza os dados usando o DTO
+    // UPDATE (PUT) - Atualiza os dados usando o DTO
     [HttpPut("{id}")]
     public async Task<IActionResult> PutProduto(int id, ProdutoCreateDTO dto)
     {
@@ -124,7 +121,7 @@ public class ProdutosController : ControllerBase
         return NoContent(); // 204 NoContent é o padrão de sucesso para PUT
     }
 
-    // 5. DELETE - Remove do banco
+    // DELETE - Remove do banco
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduto(int id)
     {

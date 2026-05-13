@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using MinhaLoja.Core.Data;
 using MinhaLoja.Core.Models;
@@ -43,5 +40,44 @@ public class CategoriasController : ControllerBase
         }
 
         return categoria;
+    }
+
+    // ==========================================
+    // ÁREA RESTRITA (Gerenciamento da Loja)
+    // Somente usuários com o cargo "Admin" entram
+    // ==========================================
+
+    [Authorize(Roles = "Admin")] // <--- O SEGREDO ESTÁ AQUI!
+    [HttpPost]
+    public async Task<IActionResult> PostCategoria(Categoria categoria)
+    {
+        _context.Categorias.Add(categoria);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetCategoria), new { id = categoria.Id }, categoria);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutCategoria(int id, Categoria categoria)
+    {
+        if (id != categoria.Id) return BadRequest();
+
+        _context.Entry(categoria).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCategoria(int id)
+    {
+        var categoria = await _context.Categorias.FindAsync(id);
+        if (categoria == null) return NotFound();
+
+        _context.Categorias.Remove(categoria);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }
