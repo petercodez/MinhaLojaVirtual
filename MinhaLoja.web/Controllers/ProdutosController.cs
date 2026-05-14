@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using MinhaLoja.Core.Data;
@@ -7,8 +8,8 @@ using MinhaLoja.Core.DTOs;
 
 namespace MinhaLoja.Web.Controllers;
 
-[Authorize] // <-- ESTA É A FECHADURA! Qualquer requisição sem token será barrada.
 [ApiController]
+[IgnoreAntiforgeryToken]
 [Route("api/[controller]")]
 public class ProdutosController : ControllerBase
 {
@@ -63,7 +64,13 @@ public class ProdutosController : ControllerBase
         return Ok(produtoDTO);
     }
 
+    // ==========================================
+    // ÁREA RESTRITA (Gerenciamento da Loja)
+    // Somente usuários com o cargo "Admin" entram
+    // ==========================================
+
     // CREATE (POST) - Recebe o DTO, salva o Model, retorna o DTO
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<ProdutoReadDTO>> PostProduto(ProdutoCreateDTO dto)
     {
@@ -96,6 +103,7 @@ public class ProdutosController : ControllerBase
     }
 
     // UPDATE (PUT) - Atualiza os dados usando o DTO
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> PutProduto(int id, ProdutoCreateDTO dto)
     {
@@ -122,6 +130,7 @@ public class ProdutosController : ControllerBase
     }
 
     // DELETE - Remove do banco
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduto(int id)
     {
