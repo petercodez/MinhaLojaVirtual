@@ -1,0 +1,61 @@
+@page "/login"
+@using MinhaLoja.Core.DTOs
+@using MinhaLoja.web.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">Acesso ao Sistema</h3>
+
+                    @* Mostra mensagem de erro se a senha estiver errada *@
+                    @if (!string.IsNullOrEmpty(mensagemErro))
+                    {
+                        <div class="alert alert-danger">@mensagemErro</div>
+                    }
+
+                    <EditForm Model="@loginDto" OnValidSubmit="FazerLogin">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <InputText @bind-Value="loginDto.Email" class="form-control" placeholder="admin@loja.com" />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Senha</label>
+                            <InputText @bind-Value="loginDto.Password" type="password" class="form-control" placeholder="Sua senha" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Entrar</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginDTO loginDto = new();
+    private string mensagemErro = "";
+
+    private async Task FazerLogin()
+    {
+        mensagemErro = ""; // Limpa erros antigos
+        
+        // Chama o serviço que bate na API
+        var sucesso = await AuthService.LoginAsync(loginDto);
+        
+        if (sucesso)
+        {
+            // Se deu certo, redireciona para a página inicial
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            // Se deu errado, mostra o aviso na tela
+            mensagemErro = "Email ou senha inválidos. Tente novamente.";
+        }
+    }
+}

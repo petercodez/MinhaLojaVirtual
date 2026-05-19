@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components.Authorization;
+using MinhaLoja.web.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,7 +57,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme // <-- Limpo!
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
@@ -85,7 +88,11 @@ builder.Services.AddScoped(sp => new HttpClient {
     BaseAddress = new Uri("https://localhost:5269/") // Ajuste para a sua porta real
 });
 
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddScoped<AuthService>();
 
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddAuthorizationCore(); // Habilita as tags [Authorize] no Frontend
 
 var app = builder.Build();
 
@@ -113,5 +120,6 @@ app.MapRazorComponents<App>()
 
 // app.MapControllers();
 
+// Decidir qual app.MapControllers() será mantido no final do projeto!
 app.MapControllers().DisableAntiforgery();
 app.Run();
