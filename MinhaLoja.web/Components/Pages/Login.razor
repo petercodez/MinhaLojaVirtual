@@ -1,8 +1,10 @@
 @page "/login"
-@using MinhaLoja.Core.DTOs
+@rendermode InteractiveServer
+@using MinhaLoja.Core.DTOs 
 @using MinhaLoja.web.Services
 @inject AuthService AuthService
 @inject NavigationManager Navigation
+
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -17,7 +19,7 @@
                         <div class="alert alert-danger">@mensagemErro</div>
                     }
 
-                    <EditForm Model="@loginDto" OnValidSubmit="FazerLogin">
+                    <EditForm Model="@loginDto" OnValidSubmit="FazerLogin" FormName="formLoginApp">
                         <div class="mb-3">
                             <label class="form-label">Email</label>
                             <InputText @bind-Value="loginDto.Email" class="form-control" placeholder="admin@loja.com" />

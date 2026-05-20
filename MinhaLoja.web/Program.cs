@@ -83,12 +83,24 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Isso permite que o Blazor chame a si mesmo (a API)
-builder.Services.AddScoped(sp => new HttpClient { 
-    BaseAddress = new Uri("https://localhost:5269/") // Ajuste para a sua porta real
+// Registra o LocalStorage (O Cofre)
+builder.Services.AddBlazoredLocalStorage();
+
+// Registra o interceptor de Token (O Entregador)
+builder.Services.AddScoped<JwtDelegatingHandler>();
+
+// Ensina o sistema a criar o HttpClient ÚNICO, já com o interceptor embutido
+builder.Services.AddScoped(sp =>
+{
+    var handler = sp.GetRequiredService<JwtDelegatingHandler>();
+    handler.InnerHandler = new HttpClientHandler(); 
+    
+    return new HttpClient(handler) 
+    { 
+        BaseAddress = new Uri("http://localhost:5269/") 
+    };
 });
 
-builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
