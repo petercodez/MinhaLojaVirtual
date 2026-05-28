@@ -28,7 +28,7 @@ namespace MinhaLoja.web.Services
 
             // Se tiver token, extrai as informações dele (Email, Cargos)
             var claims = ParseClaimsFromJwt(token);
-            var identity = new ClaimsIdentity(claims, "jwt");
+            var identity = new ClaimsIdentity(claims, "jwt", "name", "role");
             var user = new ClaimsPrincipal(identity);
 
             // Avisa o Blazor: "Temos um usuário logado com essas informações!"
@@ -58,7 +58,7 @@ namespace MinhaLoja.web.Services
         // Método para forçar a tela a atualizar quando o usuário faz login ou logout
         public void NotifyUserAuthentication(string token)
         {
-            var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
+            var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt", "name", "role"));
             var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
             NotifyAuthenticationStateChanged(authState);
         }

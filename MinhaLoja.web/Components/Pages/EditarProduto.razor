@@ -1,0 +1,117 @@
+@page "/editar-produto/{Id:int}"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+@using MinhaLoja.Core.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">Editar Produto</h3>
+
+                    @if (!string.IsNullOrEmpty(mensagem))
+                    {
+                        <div class="alert alert-@tipoAlerta">@mensagem</div>
+                    }
+
+                    @* Mostra carregando enquanto busca o produto pelo ID *@
+                    @if (produtoDto == null)
+                    {
+                        <div class="text-center"><div class="spinner-border text-primary"></div></div>
+                    }
+                    else
+                    {
+                        <EditForm Model="@produtoDto" OnValidSubmit="AtualizarProduto" FormName="formEditarProduto">
+                            <div class="mb-3">
+                                <label class="form-label">Nome do Produto</label>
+                                <InputText @bind-Value="produtoDto.Nome" class="form-control" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Descrição</label>
+                                <InputTextArea @bind-Value="produtoDto.Descricao" class="form-control" rows="3" />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Preço (R$)</label>
+                                    <InputNumber @bind-Value="produtoDto.Preco" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">ID da Categoria</label>
+                                    <InputNumber @bind-Value="produtoDto.CategoriaId" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-secondary w-50" @onclick="Voltar">
+                                    <span class="bi bi-arrow-left"></span> Voltar
+                                </button>
+                                <button type="submit" class="btn btn-warning w-50 fw-bold">
+                                    <span class="bi bi-save"></span> Salvar Alterações
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Esse [Parameter] diz ao Blazor para pegar o {Id} que veio na URL e colocar aqui
+    [Parameter]
+    public int Id { get; set; }
+
+    // Usamos o DTO de criação porque ele tem a estrutura exata (Nome, Descricao, Preco, CategoriaId) que o PUT costuma pedir
+    private ProdutoCreateDTO? produtoDto; 
+    
+    private string mensagem = "";
+    private string tipoAlerta = "info";
+
+    // Quando a tela carregar, busca os dados do produto específico
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Bate no endpoint GET /api/produtos/{id}
+            produtoDto = await Http.GetFromJsonAsync<ProdutoCreateDTO>($"api/produtos/{Id}");
+        }
+        catch (Exception)
+        {
+            tipoAlerta = "danger";
+            mensagem = "Erro ao carregar os dados do produto. Ele pode ter sido apagado.";
+        }
+    }
+
+    private async Task AtualizarProduto()
+    {
+        mensagem = "";
+
+        if (produtoDto != null)
+        {
+            // O interceptor coloca o token e envia os dados alterados via PUT
+            var response = await Http.PutAsJsonAsync($"api/produtos/{Id}", produtoDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                tipoAlerta = "success";
+                mensagem = "Produto atualizado com sucesso!";
+            }
+            else
+            {
+                tipoAlerta = "danger";
+                mensagem = $"Erro ao atualizar o produto. Status: {response.StatusCode}";
+            }
+        }
+    }
+
+    private void Voltar()
+    {
+        Navigation.NavigateTo("/");
+    }
+}
