@@ -3,6 +3,7 @@
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject MinhaLoja.web.Services.CarrinhoService CarrinhoService
 
 <PageTitle>Minha Loja Virtual</PageTitle>
 
@@ -48,12 +49,9 @@
                             </p>
                             
                             <hr />
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <h4 class="text-success fw-bold mb-0">@produto.Preco.ToString("C")</h4>
-                                <button class="btn btn-outline-primary">
-                                    <span class="bi bi-cart-plus" aria-hidden="true"></span> Comprar
-                                </button>
-                            </div>
+                            <button class="btn btn-outline-primary" @onclick="() => AdicionarProduto(produto)">
+                                Comprar
+                            </button>
 
                             @* PAINEL DO ADMINISTRADOR (SÓ ADMIN VÊ) *@
                             <AuthorizeView Roles="Admin">
@@ -125,5 +123,10 @@
                 await JS.InvokeVoidAsync("alert", "Erro ao excluir o produto. Verifique o servidor.");
             }
         }
+    }
+    private async Task AdicionarProduto(ProdutoReadDTO produtoSelecionado)
+    {
+        // Envia a guitarra selecionada para o "cérebro" do carrinho
+        await CarrinhoService.AdicionarAoCarrinho(produtoSelecionado);
     }
 }

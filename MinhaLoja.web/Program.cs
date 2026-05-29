@@ -44,7 +44,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=MinhaLoja.db"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Registrar os Controllers e configurar o JSON para ignorar ciclos
 builder.Services.AddControllers()
@@ -83,6 +83,8 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddScoped<CarrinhoService>();
+
 // Registra o LocalStorage (O Cofre)
 builder.Services.AddBlazoredLocalStorage();
 
@@ -101,6 +103,9 @@ builder.Services.AddScoped(sp =>
     };
 });
 
+builder.Services.AddExceptionHandler<MinhaLoja.web.Handlers.GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
@@ -108,7 +113,11 @@ builder.Services.AddAuthorizationCore(); // Habilita as tags [Authorize] no Fron
 
 var app = builder.Build();
 
+// >> PIPELINE <<
 // Configure the HTTP request pipeline.
+
+app.UseExceptionHandler();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -134,4 +143,11 @@ app.MapRazorComponents<App>()
 
 // Decidir qual app.MapControllers() será mantido no final do projeto!
 app.MapControllers().DisableAntiforgery();
+
+// Rota kamikaze para testar o GlobalExceptionHandler
+// app.MapGet("/api/teste-erro", () => 
+// {
+//     throw new Exception("Isso é um erro gravíssimo simulado que derrubaria o sistema!"); 
+// });
+
 app.Run();

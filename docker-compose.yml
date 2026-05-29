@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: lojavirtual-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=AdminLoja@123
+      - POSTGRES_DB=lojavirtual_db
+    ports:
+      - "5432:5432"
+    restart: unless-stopped

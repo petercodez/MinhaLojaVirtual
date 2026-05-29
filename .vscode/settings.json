@@ -1,0 +1,15 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Docker - Loja Virtual",
+            "database": "lojavirtual_db",
+            "username": "postgres",
+            "password": "AdminLoja@123"
+        }
+    ]
+}

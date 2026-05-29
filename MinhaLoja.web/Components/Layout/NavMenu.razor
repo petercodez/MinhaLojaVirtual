@@ -1,56 +1,135 @@
-﻿@using MinhaLoja.web.Services
-@inject AuthService AuthService
+﻿@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject MinhaLoja.web.Services.CarrinhoService CarrinhoService
+@implements IDisposable
 
-<div class="top-row ps-3 navbar navbar-dark">
+<nav class="navbar navbar-expand-lg navbar-dark px-4 shadow-sm" style="background-color: #0b0b0b;">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">MinhaLoja.web</a>
-    </div>
-</div>
+        
+        <a class="navbar-brand fw-bold fs-3 text-white" href="/">
+            STRING<span class="text-warning">HEAVEN</span>
+        </a>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-4">
+            <li class="nav-item"><a class="nav-link text-white text-uppercase" style="font-size: 0.85rem;" href="/">Guitarras</a></li>
+        </ul>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-    
-    <div class="nav-item px-3">
-        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-            <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-        </NavLink>
-    </div>
-
-    <AuthorizeView>
-        <Authorized>
-            <div class="nav-item px-3">
-                <span class="nav-link text-success fw-bold">
-                    <span class="bi bi-person-badge-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+        <div class="d-flex align-items-center gap-4 me-4">
+            
+            <div class="position-relative text-white" style="cursor: pointer;">
+                <i class="bi bi-cart3 fs-4"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle text-dark" style="background-color: #ffd700; font-size: 0.7rem; padding: 0.35em 0.5em;">
+                    @quantidadeCarrinho
                 </span>
             </div>
-            <div class="nav-item px-3">
-                <button class="nav-link btn btn-link text-danger" style="cursor: pointer; text-align: left;" @onclick="FazerLogout">
-                    <span class="bi bi-box-arrow-right-nav-menu" aria-hidden="true"></span> Sair
-                </button>
-            </div>
-        </Authorized>
 
-        <NotAuthorized>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="login">
-                    <span class="bi bi-door-open-fill-nav-menu" aria-hidden="true"></span> Entrar
-                </NavLink>
+            <div class="nav-item dropdown user-dropdown position-relative" style="cursor: pointer;">
+                <div class="text-white px-1">
+                    <i class="bi bi-person-circle fs-4"></i>
+                </div>
+                
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-0 custom-dropdown" style="right: 0; left: auto; min-width: 200px;">
+                    <AuthorizeView>
+                        
+                        @* LOGADO *@
+                        <Authorized>
+                            <li><div class="dropdown-header text-center bg-warning text-dark fw-bold py-2 fs-6">Olá, @context.User.Identity?.Name</div></li>
+                            <li><a class="dropdown-item py-2" href="#">Minha conta</a></li>
+                            <li><a class="dropdown-item py-2" href="#">Meus pedidos</a></li>
+                            <li><hr class="dropdown-divider m-0"></li>
+                            <li><button class="dropdown-item py-2 text-danger fw-bold" @onclick="Sair">Sair</button></li>
+                        </Authorized>
+
+                        @* DESLOGADO *@
+                        <NotAuthorized>
+                            <li>
+                                <a class="dropdown-header text-center bg-warning text-dark fw-bold py-2 fs-6 text-decoration-none hover-entrar" href="/login">
+                                    Entrar
+                                </a>
+                            </li>
+                            <li><a class="dropdown-item py-2" href="/cadastro">Cadastre-se</a></li>
+                            <li><hr class="dropdown-divider m-0"></li>
+                            <li><a class="dropdown-item py-2" href="#">Minha conta</a></li>
+                            <li><a class="dropdown-item py-2" href="#">Meus pedidos</a></li>
+                        </NotAuthorized>
+
+                    </AuthorizeView>
+                </ul>
             </div>
-        </NotAuthorized>
-    </AuthorizeView>
+
+        </div>
+    </div>
 </nav>
-</div>
+
+<style>
+    /* Mantém o menu aberto ao passar o mouse */
+    .user-dropdown:hover .dropdown-menu {
+        display: block;
+        margin-top: 0 !important; 
+    }
+    
+    /* Borda amarela no topo do dropdown */
+    .custom-dropdown {
+        border-top: 4px solid #ffd700 !important; 
+    }
+
+    /* Efeito de Hover nos links comuns (Minha Conta, Meus Pedidos, Sair) */
+    .dropdown-item {
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #e9ecef !important; /* Cinza mais escuro para destacar */
+        color: #000;
+    }
+
+    /* Efeito de Hover específico para o botão amarelo de Entrar */
+    .hover-entrar:hover {
+        background-color: #e6c200 !important; /* Um amarelo levemente mais escuro */
+        color: #000 !important;
+    }
+</style>
 
 @code {
-    private async Task FazerLogout()
+    private int quantidadeCarrinho = 0;
+
+    protected override async Task OnInitializedAsync()
     {
-        // Chama o serviço que remove o token do LocalStorage
-        await AuthService.LogoutAsync();
+        // 1. Ao carregar a página, lê quantos itens já estão no LocalStorage
+        await AtualizarQuantidade();
+
+        // 2. Inscreve este componente para ouvir o alarme do CarrinhoService
+        CarrinhoService.OnChange += AtualizarTela;
+    }
+
+    private async void AtualizarTela()
+    {
+        await AtualizarQuantidade();
         
-        // Redireciona o usuário para a tela de login forçando o recarregamento da página
-        Navigation.NavigateTo("/login", forceLoad: true);
+        // Essa linha é o segredo do Blazor: ela avisa o navegador para redesenhar o HTML
+        StateHasChanged(); 
+    }
+
+    private async Task AtualizarQuantidade()
+    {
+        var itens = await CarrinhoService.ObterCarrinho();
+        quantidadeCarrinho = itens.Count;
+    }
+
+    private async Task Sair()
+    {
+        await LocalStorage.RemoveItemAsync("authToken");
+        var customAuthStateProvider = (MinhaLoja.web.Services.CustomAuthStateProvider)AuthStateProvider;
+        customAuthStateProvider.NotifyUserLogout();
+        Navigation.NavigateTo("/", forceLoad: true); 
+    }
+
+    // Desliga o alarme caso o componente seja destruído
+    public void Dispose()
+    {
+        CarrinhoService.OnChange -= AtualizarTela;
     }
 }

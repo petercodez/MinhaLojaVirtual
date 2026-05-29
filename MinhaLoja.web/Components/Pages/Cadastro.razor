@@ -1,0 +1,91 @@
+@page "/cadastro"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 rounded-0" style="border-top: 4px solid #ffd700 !important;">
+                <div class="card-header bg-dark text-white text-center py-4">
+                    <h4 class="fw-bold mb-0">Crie sua Conta</h4>
+                </div>
+                <div class="card-body p-5 bg-light">
+                    
+                    @if (!string.IsNullOrEmpty(mensagemErro))
+                    {
+                        <div class="alert alert-danger shadow-sm">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @mensagemErro
+                        </div>
+                    }
+
+                    <EditForm Model="@registro" OnValidSubmit="RealizarCadastro">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-floating mb-3">
+                            <InputText id="email" type="email" class="form-control" @bind-Value="registro.Email" placeholder="nome@exemplo.com" required />
+                            <label for="email">E-mail</label>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <InputText id="senha" type="password" class="form-control" @bind-Value="registro.Password" placeholder="Senha" required />
+                            <label for="senha">Senha</label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-warning fw-bold py-2 fs-5" type="submit">
+                                Cadastrar
+                            </button>
+                        </div>
+                    </EditForm>
+
+                </div>
+                <div class="card-footer text-center py-3 bg-white">
+                    <div class="small">
+                        <a href="/login" class="text-dark text-decoration-none fw-bold hover-amarelo">
+                            Já tem uma conta? Faça login!
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-amarelo:hover { color: #d4b000 !important; }
+</style>
+
+@code {
+    // Essa classe espelha os dados que a sua API espera receber
+    public class RegistroViewModel 
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    private RegistroViewModel registro = new();
+    private string mensagemErro = "";
+
+    private async Task RealizarCadastro()
+    {
+        try
+        {
+            // Dispara o POST invisível para a sua API, igual o Swagger faria
+            var response = await Http.PostAsJsonAsync("api/Auth/registrar", registro);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Deu certo! Manda o usuário pra tela de login
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                mensagemErro = "Não foi possível realizar o cadastro. Verifique os dados.";
+            }
+        }
+        catch
+        {
+            mensagemErro = "Erro de conexão com o servidor. Tente novamente mais tarde.";
+        }
+    }
+}

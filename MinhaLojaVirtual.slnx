@@ -3,4 +3,5 @@
     <Project Path="MinhaLoja.Web/MinhaLoja.web.csproj" />
   </Folder>
   <Project Path="MinhaLoja.Core/MinhaLoja.Core.csproj" />
+  <Project Path="MinhaLoja.Tests/MinhaLoja.Tests.csproj" />
 </Solution>
