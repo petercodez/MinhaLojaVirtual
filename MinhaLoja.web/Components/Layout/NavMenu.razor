@@ -4,6 +4,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject MinhaLoja.web.Services.CarrinhoService CarrinhoService
 @implements IDisposable
+@inject HttpClient Http
 
 <nav class="navbar navbar-expand-lg navbar-dark px-4 shadow-sm" style="background-color: #0b0b0b;">
     <div class="container-fluid">
@@ -37,9 +38,9 @@
                         
                         @* LOGADO *@
                         <Authorized>
-                            <li><div class="dropdown-header text-center bg-warning text-dark fw-bold py-2 fs-6">Olá, @context.User.Identity?.Name</div></li>
+                            <li><div class="dropdown-header text-center bg-warning text-dark fw-bold py-2 fs-6">Olá, @primeiroNome</div></li>
                             <li><a class="dropdown-item py-2" href="/minha-conta">Minha conta</a></li>
-                            <li><a class="dropdown-item py-2" href="#">Meus pedidos</a></li>
+                            <li><a class="dropdown-item py-2" href="/meus-pedidos">Meus pedidos</a></li>
                             <li><hr class="dropdown-divider m-0"></li>
                             <li><button class="dropdown-item py-2 text-danger fw-bold" @onclick="Sair">Sair</button></li>
                         </Authorized>
@@ -54,8 +55,8 @@
                             <li><a class="dropdown-item py-2" href="/cadastro">Cadastre-se</a></li>
                             <li><hr class="dropdown-divider m-0"></li>
                             @* Ao clicar no minha conta deslogado, será levado para uma tela de cadastro, mudar depois *@
-                            <li><a class="dropdown-item py-2" href="/minha-conta">Minha conta</a></li>
-                            <li><a class="dropdown-item py-2" href="#">Meus pedidos</a></li>
+                            <li><a class="dropdown-item py-2" href="/cadastro">Minha conta</a></li>
+                            <li><a class="dropdown-item py-2" href="/cadastro">Meus pedidos</a></li>
                         </NotAuthorized>
 
                     </AuthorizeView>
@@ -98,21 +99,75 @@
 
 @code {
     private int quantidadeCarrinho = 0;
+    private string primeiroNome = "";
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. Ao carregar a página, lê quantos itens já estão no LocalStorage
+        // 1. Inicia o Carrinho
         await AtualizarQuantidade();
-
-        // 2. Inscreve este componente para ouvir o alarme do CarrinhoService
         CarrinhoService.OnChange += AtualizarTela;
+        
+        // 2. Fica "escutando" caso o usuário faça login ou logout para mudar o nome na hora
+        AuthStateProvider.AuthenticationStateChanged += AtualizarNomeUsuario;
+
+        // 3. Carrega o nome na primeira vez que a tela abre
+        await CarregarNome(await AuthStateProvider.GetAuthenticationStateAsync());
     }
 
+    // ==========================================
+    // LÓGICA DO NOME DO USUÁRIO
+    // ==========================================
+    private async void AtualizarNomeUsuario(Task<AuthenticationState> taskState)
+    {
+        var state = await taskState;
+        await CarregarNome(state);
+        StateHasChanged(); // Manda o HTML redesenhar com o nome novo!
+    }
+
+    private async Task CarregarNome(AuthenticationState authState)
+    {
+        if (authState.User.Identity is not null && authState.User.Identity.IsAuthenticated)
+        {
+            try
+            {
+                var token = await LocalStorage.GetItemAsync<string>("authToken");
+                Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                
+                // Vai no PostgreSQL procurar a ficha do cliente
+                var response = await Http.GetAsync("api/Cliente/meu-perfil");
+                if (response.IsSuccessStatusCode)
+                {
+                    var perfil = await response.Content.ReadFromJsonAsync<MinhaLoja.Core.DTOs.ClienteDTO>();
+                    if (perfil != null && !string.IsNullOrWhiteSpace(perfil.NomeCompleto))
+                    {
+                        // Quebra o nome nos espaços e pega só a primeira palavra (ex: "Josias Silva" vira "Josias")
+                        primeiroNome = perfil.NomeCompleto.Split(' ')[0];
+                        return;
+                    }
+                }
+                
+                // PLANO B: Se ele acabou de se cadastrar no checkout mas ainda não tem nome no banco,
+                // usamos o que vem antes do @ do e-mail dele!
+                var email = authState.User.Identity.Name ?? "";
+                primeiroNome = email.Split('@')[0];
+            }
+            catch
+            {
+                primeiroNome = "Visitante";
+            }
+        }
+        else
+        {
+            primeiroNome = "";
+        }
+    }
+
+    // ===========================
+    // LÓGICA DO CARRINHO E LOGOUT
+    // ===========================
     private async void AtualizarTela()
     {
         await AtualizarQuantidade();
-        
-        // Essa linha é o segredo do Blazor: ela avisa o navegador para redesenhar o HTML
         StateHasChanged(); 
     }
 
@@ -130,9 +185,10 @@
         Navigation.NavigateTo("/", forceLoad: true); 
     }
 
-    // Desliga o alarme caso o componente seja destruído
+    // Desliga os "alarmes" se a pessoa fechar a aba do navegador
     public void Dispose()
     {
         CarrinhoService.OnChange -= AtualizarTela;
+        AuthStateProvider.AuthenticationStateChanged -= AtualizarNomeUsuario;
     }
 }

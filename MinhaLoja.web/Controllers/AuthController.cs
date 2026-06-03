@@ -81,7 +81,8 @@ namespace MinhaLoja.web.Controllers
             var authClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.UserName!),
-                new Claim(ClaimTypes.Email, user.Email!)
+                new Claim(ClaimTypes.Email, user.Email!),
+                new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
 
             // Injeta cada cargo do usuário dentro do crachá JWT

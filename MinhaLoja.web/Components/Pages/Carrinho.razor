@@ -3,6 +3,8 @@
 @inject MinhaLoja.web.Services.CarrinhoService CarrinhoService
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject HttpClient Http
 
 <div class="container mt-5">
     <h2 class="fw-bold mb-4">Finalizar Compra</h2>
@@ -181,90 +183,140 @@
 </div>
 
 @code {
-    // ==========================================
-    // 1. VARIÁVEIS DE ESTADO DA TELA
-    // ==========================================
     private bool pedidoFinalizado = false;
     private List<ProdutoReadDTO> itensCarrinho = new List<ProdutoReadDTO>();
     private decimal valorTotal = 0;
     private int etapaAtual = 1;
-
-    // Nova variável para controlar se a tela deve pedir e-mail/senha ou não
     private bool usuarioLogado = false;
-
-    // O DTO agora junta tudo que precisamos para esse "Cadastro Diferenciado"
-    // Ele substitui a antiga variável 'cliente'
     private CheckoutDTO checkoutForm = new CheckoutDTO(); 
 
-    // ==========================================
-    // 2. INICIALIZAÇÃO E CARRINHO
-    // ==========================================
     protected override async Task OnInitializedAsync()
     {
         await CarregarCarrinho();
 
-        // Verifica silenciosamente se o usuário já tem o "crachá" (se está logado)
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        
-        // Se o Identity não for nulo e estiver autenticado, usuarioLogado vira true
         usuarioLogado = authState.User.Identity?.IsAuthenticated ?? false;
+
+        // SE O USUÁRIO JÁ ESTIVER LOGADO: Pré-carrega os dados dele do banco para o formulário vir preenchido!
+        if (usuarioLogado)
+        {
+            try
+            {
+                var token = await LocalStorage.GetItemAsync<string>("authToken");
+                Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await Http.GetAsync("api/Cliente/meu-perfil");
+                if (response.IsSuccessStatusCode)
+                {
+                    var perfilSalvo = await response.Content.ReadFromJsonAsync<CheckoutDTO>();
+                    if (perfilSalvo != null)
+                    {
+                        checkoutForm.NomeCompleto = perfilSalvo.NomeCompleto;
+                        checkoutForm.CPF = perfilSalvo.CPF;
+                        checkoutForm.Telefone = perfilSalvo.Telefone;
+                        checkoutForm.EnderecoCompleto = perfilSalvo.EnderecoCompleto;
+                    }
+                }
+            }
+            catch { /* Silencia falhas de pré-carregamento para não travar o checkout */ }
+        }
     }
 
     private async Task CarregarCarrinho()
     {
         itensCarrinho = await CarrinhoService.ObterCarrinho();
-        valorTotal = itensCarrinho.Sum(i => i.Preco); // Calcula a soma de tudo!
+        valorTotal = itensCarrinho.Sum(i => i.Preco); 
     }
 
     private async Task RemoverItem(ProdutoReadDTO produto)
     {
-        // 1. Manda o serviço apagar o item do disco do navegador
         await CarrinhoService.RemoverDoCarrinho(produto);
-        
-        // 2. Recarrega a lista na tela e já recalcula o valor total subtraindo o item apagado
         await CarregarCarrinho();
     }
 
-    // ==========================================
-    // 3. FLUXO DO CHECKOUT (ETAPAS)
-    // ==========================================
     private void AvancarParaCadastro()
     {
-        // Agora TODO MUNDO avança para a etapa 2. 
-        // Não redirecionamos mais para o /login. A diferença será tratada no HTML da Etapa 2.
         etapaAtual = 2;
     }
 
-    private void SalvarFichaCliente()
+    private async Task SalvarFichaCliente()
     {
-        // FUTURO: Se !usuarioLogado, chama a API de registro (/api/auth/registrar), 
-        // faz o login automático, e depois salva os dados de envio.
-        // Se usuarioLogado, apenas salva os dados de envio.
+        // SE NÃO ESTIVER LOGADO: Faz o fluxo de cadastro e autenticação automática em lote
+        if (!usuarioLogado)
+        {
+            // Passo A: Criar a conta básica de autenticação
+            var dadosRegistro = new { email = checkoutForm.Email, password = checkoutForm.Senha };
+            var registroResponse = await Http.PostAsJsonAsync("api/Auth/registrar", dadosRegistro);
+
+            if (!registroResponse.IsSuccessStatusCode) return; // Interrompe se o e-mail já existir, por exemplo.
+
+            // Passo B: Autenticar imediatamente para capturar o Token JWT
+            var loginResponse = await Http.PostAsJsonAsync("api/Auth/login", dadosRegistro);
+            if (loginResponse.IsSuccessStatusCode)
+            {
+                var resultadoLogin = await loginResponse.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (resultadoLogin != null && resultadoLogin.TryGetValue("token", out var token))
+                {
+                    // Grava no cofre físico do navegador e liga a sessão global
+                    await LocalStorage.SetItemAsync("authToken", token);
+                    var customProvider = (MinhaLoja.web.Services.CustomAuthStateProvider)AuthStateProvider;
+                    customProvider.NotifyUserAuthentication(token);
+                    usuarioLogado = true;
+                }
+            }
+        }
+
+        // SALVAMENTO DA FICHA DO CLIENTE (Válido para os dois cenários)
+        // Separa apenas os dados que a API do Cliente espera receber (ignorando email/senha da tela)
+        var payloadCliente = new 
+        {
+            NomeCompleto = checkoutForm.NomeCompleto,
+            CPF = checkoutForm.CPF,
+            Telefone = checkoutForm.Telefone,
+            EnderecoCompleto = checkoutForm.EnderecoCompleto
+        };
+
+        var tokenAtual = await LocalStorage.GetItemAsync<string>("authToken");
+        Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenAtual);
+
+        var perfilResponse = await Http.PostAsJsonAsync("api/Cliente/salvar-perfil", payloadCliente);
         
-        // Por enquanto, vamos só pular para a fase de Pagamento.
-        etapaAtual = 3;
+        if (perfilResponse.IsSuccessStatusCode)
+        {
+            // ---> NOVIDADE AQUI: Cria o Pedido de fato <---
+            
+            // 1. Extrai os IDs das guitarras do carrinho
+            var pedidoDto = new FinalizarPedidoDTO 
+            { 
+                ProdutoIds = itensCarrinho.Select(i => i.Id).ToList() 
+            };
+
+            // 3. Chama a nossa nova API de Pedidos!
+            var pedidoResponse = await Http.PostAsJsonAsync("api/Pedido/finalizar", pedidoDto);
+
+            if (pedidoResponse.IsSuccessStatusCode)
+            {
+                // Se o pedido foi salvo no banco, limpa o carrinho no navegador e avança a etapa!
+                await CarrinhoService.LimparCarrinho();
+                etapaAtual = 3; 
+            }
+            else 
+            {
+                // FUTURO: Pode colocar um alerta de erro aqui caso dê ruim no banco.
+            }
+        }
     }
 
     private async Task FinalizarPedido()
     {
-        // 1. Limpa o carrinho no navegador e zera o menu
         await CarrinhoService.LimparCarrinho();
-        
-        // 2. Muda a chave para a tela de sucesso (alerta verde) aparecer
         pedidoFinalizado = true;
     }
 
-    // ==========================================
-    // 4. CLASSES AUXILIARES
-    // ==========================================
-    // A classe unificada para o Checkout (substitui a antiga ClienteDTO)
     public class CheckoutDTO
     {
-        // Dados de Auth (só usados e exigidos no HTML se o usuário NÃO estiver logado)
         public string Email { get; set; } = string.Empty;
         public string Senha { get; set; } = string.Empty;
-
-        // Dados de Envio (usados por todos)
         public string NomeCompleto { get; set; } = string.Empty;
         public string CPF { get; set; } = string.Empty;
         public string Telefone { get; set; } = string.Empty;

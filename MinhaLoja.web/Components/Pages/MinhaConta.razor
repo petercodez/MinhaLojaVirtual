@@ -2,6 +2,8 @@
 
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -71,26 +73,43 @@
 @code {
     private bool modoEdicao = false;
     private bool mostrarMensagemSucesso = false;
-    
-    // Agora a tela usa a sua própria classe interna, independente do Carrinho!
     private ClientePerfilDTO cliente = new(); 
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. Pega o estado atual do usuário
+        // 1. Validação de segurança básica na rota
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        
-        // 2. Se ele NÃO estiver logado, manda direto para a tela de Cadastro
         if (authState.User.Identity is null || !authState.User.Identity.IsAuthenticated)
         {
             Navigation.NavigateTo("/cadastro");
-            return; // Interrompe a execução do resto do código
+            return;
         }
 
-        // 3. Se o código chegou até aqui, o usuário ESTÁ logado!
-        // FUTURO: Aqui faremos um GET na API para ver se o usuário já tem os dados salvos.
-        // Simulação temporária: vamos fingir que ele não tem dados cadastrados ainda.
-        modoEdicao = true; 
+        // 2. CHAMADA HTTP GET: Tenta buscar o perfil real no banco de dados
+        try
+        {
+            var token = await LocalStorage.GetItemAsync<string>("authToken");
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.GetAsync("api/Cliente/meu-perfil");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Se encontrou (200 OK), preenche o balde e deixa os campos protegidos (modoEdicao = false)
+                cliente = await response.Content.ReadFromJsonAsync<ClientePerfilDTO>() ?? new();
+                modoEdicao = false;
+            }
+            else
+            {
+                // Se não encontrou (404), significa que é o primeiro acesso dele. Abre liberado para digitar.
+                modoEdicao = true; 
+            }
+        }
+        catch
+        {
+            // Tratamento de falha de conexão com a API
+            modoEdicao = true;
+        }
     }
 
     private void HabilitarEdicao()
@@ -104,16 +123,21 @@
         modoEdicao = false;
     }
 
-    private void SalvarDados()
+    private async Task SalvarDados()
     {
-        // FUTURO: Aqui daremos um POST/PUT na API para salvar no banco.
-        modoEdicao = false; 
-        mostrarMensagemSucesso = true;
+        // 3. CHAMADA HTTP POST: Envia os dados atualizados para a API persistir no banco
+        var token = await LocalStorage.GetItemAsync<string>("authToken");
+        Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var response = await Http.PostAsJsonAsync("api/Cliente/salvar-perfil", cliente);
+
+        if (response.IsSuccessStatusCode)
+        {
+            modoEdicao = false; 
+            mostrarMensagemSucesso = true;
+        }
     }
 
-    // ==========================================
-    // CLASSE AUXILIAR DA TELA DE PERFIL
-    // ==========================================
     public class ClientePerfilDTO
     {
         public string NomeCompleto { get; set; } = string.Empty;
