@@ -17,13 +17,15 @@
         </ul>
 
         <div class="d-flex align-items-center gap-4 me-4">
-            
-            <div class="position-relative text-white" style="cursor: pointer;">
-                <i class="bi bi-cart3 fs-4"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle text-dark" style="background-color: #ffd700; font-size: 0.7rem; padding: 0.35em 0.5em;">
-                    @quantidadeCarrinho
-                </span>
-            </div>
+
+            <a href="/carrinho" class="text-decoration-none">
+                <div class="position-relative text-white" style="cursor: pointer;">
+                    <i class="bi bi-cart3 fs-4"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle text-dark" style="background-color: #ffd700; font-size: 0.7rem; padding: 0.35em 0.5em;">
+                        @quantidadeCarrinho
+                    </span>
+                </div>            
+            </a>
 
             <div class="nav-item dropdown user-dropdown position-relative" style="cursor: pointer;">
                 <div class="text-white px-1">
@@ -36,7 +38,7 @@
                         @* LOGADO *@
                         <Authorized>
                             <li><div class="dropdown-header text-center bg-warning text-dark fw-bold py-2 fs-6">Olá, @context.User.Identity?.Name</div></li>
-                            <li><a class="dropdown-item py-2" href="#">Minha conta</a></li>
+                            <li><a class="dropdown-item py-2" href="/minha-conta">Minha conta</a></li>
                             <li><a class="dropdown-item py-2" href="#">Meus pedidos</a></li>
                             <li><hr class="dropdown-divider m-0"></li>
                             <li><button class="dropdown-item py-2 text-danger fw-bold" @onclick="Sair">Sair</button></li>
@@ -51,7 +53,8 @@
                             </li>
                             <li><a class="dropdown-item py-2" href="/cadastro">Cadastre-se</a></li>
                             <li><hr class="dropdown-divider m-0"></li>
-                            <li><a class="dropdown-item py-2" href="#">Minha conta</a></li>
+                            @* Ao clicar no minha conta deslogado, será levado para uma tela de cadastro, mudar depois *@
+                            <li><a class="dropdown-item py-2" href="/minha-conta">Minha conta</a></li>
                             <li><a class="dropdown-item py-2" href="#">Meus pedidos</a></li>
                         </NotAuthorized>
 

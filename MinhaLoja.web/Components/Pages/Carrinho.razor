@@ -1,0 +1,273 @@
+@page "/carrinho"
+@using MinhaLoja.Core.DTOs
+@inject MinhaLoja.web.Services.CarrinhoService CarrinhoService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="container mt-5">
+    <h2 class="fw-bold mb-4">Finalizar Compra</h2>
+
+    @if (pedidoFinalizado)
+    {
+        <div class="alert alert-success text-center shadow-sm p-5 border-0" style="border-top: 4px solid #198754 !important;">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+            <h2 class="mt-3 fw-bold">Pedido Realizado!</h2>
+            <p class="fs-5 text-muted">Sua compra foi processada com sucesso. Em breve você receberá os detalhes no seu e-mail.</p>
+            <a href="/" class="btn btn-dark mt-3 px-4 py-2 fw-bold">Voltar para a Vitrine</a>
+        </div>
+    }
+    else if (itensCarrinho.Count == 0 && etapaAtual == 1)
+    {
+        <div class="alert alert-warning text-center shadow-sm">
+            <h4>Seu carrinho está vazio!</h4>
+            <p>Volte para a vitrine e adicione alguns instrumentos.</p>
+            <a href="/" class="btn btn-dark mt-2">Voltar para a Vitrine</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-8">
+                
+                @* FASE 1: ITENS DO CARRINHO *@
+                @if (etapaAtual == 1)
+                {
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-dark text-white fw-bold">1. Itens do Pedido</div>
+                        <div class="card-body">
+                            <table class="table align-middle">
+                                <tbody>
+                                    @foreach (var item in itensCarrinho)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@item.Nome</td>
+                                            <td class="text-end text-success fw-bold">R$ @item.Preco.ToString("N2")</td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoverItem(item)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <a href="/" class="text-decoration-none text-muted">Continuar comprando</a>
+                                <button class="btn btn-warning fw-bold px-4" @onclick="AvancarParaCadastro">
+                                    Avançar <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @* FASE 2: DADOS DO CLIENTE E CADASTRO *@
+                @if (etapaAtual == 2)
+                {
+                    <div class="card shadow-sm border-0 mb-4" style="border-top: 4px solid #ffd700 !important;">
+                        <div class="card-header bg-dark text-white fw-bold">
+                            @(usuarioLogado ? "2. Endereço de Entrega" : "2. Crie sua Conta e Informe o Endereço")
+                        </div>
+                        <div class="card-body">
+                            
+                            @if (!usuarioLogado)
+                            {
+                                <div class="alert alert-info border-0 shadow-sm mb-4">
+                                    <i class="bi bi-info-circle-fill me-2"></i> Você não está logado! Preencha os dados abaixo para criar sua conta rapidamente e finalizar o pedido. 
+                                    <br/><small class="mt-1 d-block">Já tem conta? <a href="/login" class="fw-bold text-dark">Faça login aqui</a>.</small>
+                                </div>
+                            }
+
+                            <EditForm Model="checkoutForm" OnValidSubmit="SalvarFichaCliente">
+                                <DataAnnotationsValidator />
+                                
+                                @* Mostra E-mail e Senha SÓ se não estiver logado *@
+                                @if (!usuarioLogado)
+                                {
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">E-mail</label>
+                                            <InputText type="email" class="form-control" @bind-Value="checkoutForm.Email" required />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Crie uma Senha</label>
+                                            <InputText type="password" class="form-control" @bind-Value="checkoutForm.Senha" required />
+                                        </div>
+                                    </div>
+                                    <hr class="my-4 text-muted" />
+                                }
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Nome Completo</label>
+                                    <InputText class="form-control" @bind-Value="checkoutForm.NomeCompleto" 
+                                               oninput="this.value = this.value.replace(/[^a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s]/g, '')" required />
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">CPF</label>
+                                        <InputText class="form-control" @bind-Value="checkoutForm.CPF" placeholder="000.000.000-00"
+                                                   oninput="let v = this.value.replace(/\D/g, ''); if(v.length > 11) v = v.substring(0,11); this.value = v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Telefone</label>
+                                        <InputText class="form-control" @bind-Value="checkoutForm.Telefone" placeholder="(00) 00000-0000"
+                                                   oninput="let v = this.value.replace(/\D/g, ''); if(v.length > 11) v = v.substring(0,11); this.value = v.replace(/^(\d{2})(\d)/g, '($1) $2').replace(/(\d)(\d{4})$/, '$1-$2');" required />
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Endereço de Entrega</label>
+                                    <InputText class="form-control" @bind-Value="checkoutForm.EnderecoCompleto" required />
+                                </div>
+
+                                <div class="text-end mt-4">
+                                    <button type="submit" class="btn btn-warning fw-bold px-4">
+                                        Ir para Pagamento <i class="bi bi-wallet2"></i>
+                                    </button>
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
+                }
+
+                @* FASE 3: PAGAMENTO *@
+                @if (etapaAtual == 3)
+                {
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-dark text-white fw-bold">3. Forma de Pagamento</div>
+                        <div class="card-body">
+                            <div class="form-check border p-3 rounded mb-2">
+                                <input class="form-check-input" type="radio" name="pagamento" id="pix" checked>
+                                <label class="form-check-label fw-bold d-flex align-items-center gap-2" for="pix">
+                                    <i class="bi bi-qr-code text-success fs-4"></i> PIX (Aprovação imediata)
+                                </label>
+                            </div>
+                            <div class="form-check border p-3 rounded">
+                                <input class="form-check-input" type="radio" name="pagamento" id="cartao">
+                                <label class="form-check-label fw-bold d-flex align-items-center gap-2" for="cartao">
+                                    <i class="bi bi-credit-card text-primary fs-4"></i> Cartão de Crédito
+                                </label>
+                            </div>
+                            
+                            <button class="btn btn-success w-100 fw-bold py-3 mt-4" @onclick="FinalizarPedido">
+                                FINALIZAR PEDIDO
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 bg-light">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-3">Resumo da Compra</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span>R$ @valorTotal.ToString("N2")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 text-success">
+                            <span>Frete</span>
+                            <span>Grátis</span>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between mb-0 fs-4 fw-bold">
+                            <span>Total</span>
+                            <span>R$ @valorTotal.ToString("N2")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    // ==========================================
+    // 1. VARIÁVEIS DE ESTADO DA TELA
+    // ==========================================
+    private bool pedidoFinalizado = false;
+    private List<ProdutoReadDTO> itensCarrinho = new List<ProdutoReadDTO>();
+    private decimal valorTotal = 0;
+    private int etapaAtual = 1;
+
+    // Nova variável para controlar se a tela deve pedir e-mail/senha ou não
+    private bool usuarioLogado = false;
+
+    // O DTO agora junta tudo que precisamos para esse "Cadastro Diferenciado"
+    // Ele substitui a antiga variável 'cliente'
+    private CheckoutDTO checkoutForm = new CheckoutDTO(); 
+
+    // ==========================================
+    // 2. INICIALIZAÇÃO E CARRINHO
+    // ==========================================
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarCarrinho();
+
+        // Verifica silenciosamente se o usuário já tem o "crachá" (se está logado)
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        
+        // Se o Identity não for nulo e estiver autenticado, usuarioLogado vira true
+        usuarioLogado = authState.User.Identity?.IsAuthenticated ?? false;
+    }
+
+    private async Task CarregarCarrinho()
+    {
+        itensCarrinho = await CarrinhoService.ObterCarrinho();
+        valorTotal = itensCarrinho.Sum(i => i.Preco); // Calcula a soma de tudo!
+    }
+
+    private async Task RemoverItem(ProdutoReadDTO produto)
+    {
+        // 1. Manda o serviço apagar o item do disco do navegador
+        await CarrinhoService.RemoverDoCarrinho(produto);
+        
+        // 2. Recarrega a lista na tela e já recalcula o valor total subtraindo o item apagado
+        await CarregarCarrinho();
+    }
+
+    // ==========================================
+    // 3. FLUXO DO CHECKOUT (ETAPAS)
+    // ==========================================
+    private void AvancarParaCadastro()
+    {
+        // Agora TODO MUNDO avança para a etapa 2. 
+        // Não redirecionamos mais para o /login. A diferença será tratada no HTML da Etapa 2.
+        etapaAtual = 2;
+    }
+
+    private void SalvarFichaCliente()
+    {
+        // FUTURO: Se !usuarioLogado, chama a API de registro (/api/auth/registrar), 
+        // faz o login automático, e depois salva os dados de envio.
+        // Se usuarioLogado, apenas salva os dados de envio.
+        
+        // Por enquanto, vamos só pular para a fase de Pagamento.
+        etapaAtual = 3;
+    }
+
+    private async Task FinalizarPedido()
+    {
+        // 1. Limpa o carrinho no navegador e zera o menu
+        await CarrinhoService.LimparCarrinho();
+        
+        // 2. Muda a chave para a tela de sucesso (alerta verde) aparecer
+        pedidoFinalizado = true;
+    }
+
+    // ==========================================
+    // 4. CLASSES AUXILIARES
+    // ==========================================
+    // A classe unificada para o Checkout (substitui a antiga ClienteDTO)
+    public class CheckoutDTO
+    {
+        // Dados de Auth (só usados e exigidos no HTML se o usuário NÃO estiver logado)
+        public string Email { get; set; } = string.Empty;
+        public string Senha { get; set; } = string.Empty;
+
+        // Dados de Envio (usados por todos)
+        public string NomeCompleto { get; set; } = string.Empty;
+        public string CPF { get; set; } = string.Empty;
+        public string Telefone { get; set; } = string.Empty;
+        public string EnderecoCompleto { get; set; } = string.Empty;
+    }
+}

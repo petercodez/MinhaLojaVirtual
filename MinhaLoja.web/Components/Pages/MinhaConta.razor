@@ -1,0 +1,124 @@
+@page "/minha-conta"
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0" style="border-top: 4px solid #ffd700 !important;">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+                    <h4 class="mb-0 fw-bold">Meus Dados</h4>
+                    
+                    @if (!modoEdicao)
+                    {
+                        <button class="btn btn-warning btn-sm fw-bold" @onclick="HabilitarEdicao">
+                            <i class="bi bi-pencil-square"></i> Editar
+                        </button>
+                    }
+                </div>
+                
+                <div class="card-body p-4 bg-light">
+                    
+                    @if (mostrarMensagemSucesso)
+                    {
+                        <div class="alert alert-success shadow-sm mb-4">
+                            <i class="bi bi-check-circle-fill me-2"></i> Dados atualizados com sucesso!
+                        </div>
+                    }
+
+                    <EditForm Model="cliente" OnValidSubmit="SalvarDados">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nome Completo</label>
+                            <InputText class="form-control" @bind-Value="cliente.NomeCompleto" disabled="@(!modoEdicao)"
+                                       oninput="this.value = this.value.replace(/[^a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s]/g, '')" required />
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">CPF</label>
+                                <InputText class="form-control" @bind-Value="cliente.CPF" disabled="@(!modoEdicao)" placeholder="000.000.000-00"
+                                           oninput="let v = this.value.replace(/\D/g, ''); if(v.length > 11) v = v.substring(0,11); this.value = v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Telefone</label>
+                                <InputText class="form-control" @bind-Value="cliente.Telefone" disabled="@(!modoEdicao)" placeholder="(00) 00000-0000"
+                                           oninput="let v = this.value.replace(/\D/g, ''); if(v.length > 11) v = v.substring(0,11); this.value = v.replace(/^(\d{2})(\d)/g, '($1) $2').replace(/(\d)(\d{4})$/, '$1-$2');" required />
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Endereço de Entrega</label>
+                            <InputText class="form-control" @bind-Value="cliente.EnderecoCompleto" disabled="@(!modoEdicao)" required />
+                        </div>
+
+                        @if (modoEdicao)
+                        {
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-secondary fw-bold" @onclick="CancelarEdicao">Cancelar</button>
+                                <button type="submit" class="btn btn-success fw-bold">Salvar Alterações</button>
+                            </div>
+                        }
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool modoEdicao = false;
+    private bool mostrarMensagemSucesso = false;
+    
+    // Agora a tela usa a sua própria classe interna, independente do Carrinho!
+    private ClientePerfilDTO cliente = new(); 
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 1. Pega o estado atual do usuário
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        
+        // 2. Se ele NÃO estiver logado, manda direto para a tela de Cadastro
+        if (authState.User.Identity is null || !authState.User.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/cadastro");
+            return; // Interrompe a execução do resto do código
+        }
+
+        // 3. Se o código chegou até aqui, o usuário ESTÁ logado!
+        // FUTURO: Aqui faremos um GET na API para ver se o usuário já tem os dados salvos.
+        // Simulação temporária: vamos fingir que ele não tem dados cadastrados ainda.
+        modoEdicao = true; 
+    }
+
+    private void HabilitarEdicao()
+    {
+        modoEdicao = true;
+        mostrarMensagemSucesso = false;
+    }
+
+    private void CancelarEdicao()
+    {
+        modoEdicao = false;
+    }
+
+    private void SalvarDados()
+    {
+        // FUTURO: Aqui daremos um POST/PUT na API para salvar no banco.
+        modoEdicao = false; 
+        mostrarMensagemSucesso = true;
+    }
+
+    // ==========================================
+    // CLASSE AUXILIAR DA TELA DE PERFIL
+    // ==========================================
+    public class ClientePerfilDTO
+    {
+        public string NomeCompleto { get; set; } = string.Empty;
+        public string CPF { get; set; } = string.Empty;
+        public string Telefone { get; set; } = string.Empty;
+        public string EnderecoCompleto { get; set; } = string.Empty;
+    }
+}
