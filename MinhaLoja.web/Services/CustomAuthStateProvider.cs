@@ -31,7 +31,7 @@ namespace MinhaLoja.web.Services
             var identity = new ClaimsIdentity(claims, "jwt", "name", "role");
             var user = new ClaimsPrincipal(identity);
 
-            // Avisa o Blazor: "Temos um usuário logado com essas informações!"
+            // Avisa o Blazor: "Temos um usuário logado com essas informações"
             return new AuthenticationState(user);
         }
 

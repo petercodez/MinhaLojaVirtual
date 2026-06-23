@@ -81,7 +81,7 @@ public class ClienteController : ControllerBase
             await _context.Clientes.AddAsync(novoCliente);
         }
 
-        // Salva tudo de fato no PostgreSQL
+        // Salva tudo no PostgreSQL
         await _context.SaveChangesAsync();
 
         return Ok(new { Mensagem = "Dados salvos com sucesso!" });

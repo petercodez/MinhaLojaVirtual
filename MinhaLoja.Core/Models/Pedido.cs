@@ -60,7 +60,6 @@ public class PedidoItem
     [Required]
     public int ProdutoId { get; set; }
 
-    // Supondo que você já tenha a classe Produto
     public Produto Produto { get; set; } = null!;
 
     [Required]

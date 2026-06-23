@@ -67,7 +67,6 @@
     [Parameter]
     public int Id { get; set; }
 
-    // Usamos o DTO de criação porque ele tem a estrutura exata (Nome, Descricao, Preco, CategoriaId) que o PUT costuma pedir
     private ProdutoCreateDTO? produtoDto; 
     
     private string mensagem = "";

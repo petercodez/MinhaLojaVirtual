@@ -47,7 +47,7 @@ public class CategoriasController : ControllerBase
     // Somente usuários com o cargo "Admin" entram
     // ==========================================
 
-    [Authorize(Roles = "Admin")] // <--- O SEGREDO ESTÁ AQUI!
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> PostCategoria(Categoria categoria)
     {

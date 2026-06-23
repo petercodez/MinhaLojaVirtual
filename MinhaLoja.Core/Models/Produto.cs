@@ -11,6 +11,6 @@ public class Produto
     public decimal Preco { get; set; }
     public string ImageUrl { get; set; } = string.Empty; //"/images/placeholder.png";
     public int Estoque { get; set; }
-    public int CategoriaId { get; set; } // Esta é a Chave Estrangeira que falta
+    public int CategoriaId { get; set; }
     public Categoria Categoria { get; set; } = null!; // Propriedade de navegação
 }

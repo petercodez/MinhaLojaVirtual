@@ -13,7 +13,7 @@ namespace MinhaLoja.web.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager; // 1. O Gerente de Cargos!
+        private readonly RoleManager<IdentityRole> _roleManager; // Gerente de Cargos
         private readonly IConfiguration _configuration;
 
         public AuthController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
@@ -45,7 +45,7 @@ namespace MinhaLoja.web.Controllers
             return Ok(new { Mensagem = "Usuário criado com sucesso!" });
         }
 
-        // NOVA ROTA: Rota secreta para registrar Administradores
+        // Rota para registrar Administradores
         [HttpPost("registrar-admin")]
         public async Task<IActionResult> RegistrarAdmin(LoginDTO dto)
         {
@@ -95,7 +95,7 @@ namespace MinhaLoja.web.Controllers
             
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(authClaims), // Agora o token carrega os cargos!
+                Subject = new ClaimsIdentity(authClaims), // Agora o token carrega os cargos
                 Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                 Issuer = _configuration["JwtSettings:Issuer"],

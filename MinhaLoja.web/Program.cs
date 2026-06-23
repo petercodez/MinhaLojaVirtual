@@ -39,7 +39,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Add services to the container.
+// Adiciona serviços para o container
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -114,8 +114,6 @@ builder.Services.AddAuthorizationCore(); // Habilita as tags [Authorize] no Fron
 var app = builder.Build();
 
 // >> PIPELINE <<
-// Configure the HTTP request pipeline.
-
 app.UseExceptionHandler();
 
 if (!app.Environment.IsDevelopment())

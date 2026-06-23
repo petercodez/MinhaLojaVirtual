@@ -197,7 +197,7 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         usuarioLogado = authState.User.Identity?.IsAuthenticated ?? false;
 
-        // SE O USUÁRIO JÁ ESTIVER LOGADO: Pré-carrega os dados dele do banco para o formulário vir preenchido!
+        // SE O USUÁRIO JÁ ESTIVER LOGADO: Pré-carrega os dados dele do banco para o formulário vir preenchido
         if (usuarioLogado)
         {
             try
@@ -266,7 +266,7 @@
             }
         }
 
-        // SALVAMENTO DA FICHA DO CLIENTE (Válido para os dois cenários)
+        // SALVAMENTO DA FICHA DO CLIENTE
         // Separa apenas os dados que a API do Cliente espera receber (ignorando email/senha da tela)
         var payloadCliente = new 
         {
@@ -291,18 +291,18 @@
                 ProdutoIds = itensCarrinho.Select(i => i.Id).ToList() 
             };
 
-            // 3. Chama a nossa nova API de Pedidos!
+            // 3. Chama a API de Pedidos
             var pedidoResponse = await Http.PostAsJsonAsync("api/Pedido/finalizar", pedidoDto);
 
             if (pedidoResponse.IsSuccessStatusCode)
             {
-                // Se o pedido foi salvo no banco, limpa o carrinho no navegador e avança a etapa!
+                // Se o pedido foi salvo no banco, limpa o carrinho no navegador e avança a etapa
                 await CarrinhoService.LimparCarrinho();
                 etapaAtual = 3; 
             }
             else 
             {
-                // FUTURO: Pode colocar um alerta de erro aqui caso dê ruim no banco.
+                // FUTURO: Colocar um alerta de erro aqui caso dê ruim no banco
             }
         }
     }

@@ -58,7 +58,7 @@
     {
         mensagem = "";
 
-        // O nosso JwtDelegatingHandler vai colar o token secretamente nesta requisição!
+        // O JwtDelegatingHandler vai colar o token secretamente nesta requisição
         var response = await Http.PostAsJsonAsync("api/produtos", produtoDto);
 
         if (response.IsSuccessStatusCode)

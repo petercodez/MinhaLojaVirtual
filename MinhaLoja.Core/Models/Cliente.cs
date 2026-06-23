@@ -32,7 +32,7 @@ namespace MinhaLoja.Core.Models
 
         // Chave Estrangeira para o IdentityUser (1:1)
         [Required]
-        public string UsuarioId { get; set; } = string.Empty; // <-- Mudou de int para string!
+        public string UsuarioId { get; set; } = string.Empty;
 
         [ForeignKey(nameof(UsuarioId))]
         public IdentityUser Usuario { get; set; } = null!; // <-- Mudou de Usuario para IdentityUser!

@@ -86,7 +86,7 @@ public class ProdutosController : ControllerBase
         _context.Produtos.Add(produto);
         await _context.SaveChangesAsync();
 
-        // Carrega os dados da Categoria do banco para podermos retornar o Nome dela
+        // Carrega os dados da Categoria do banco para retornar o Nome dela
         await _context.Entry(produto).Reference(p => p.Categoria).LoadAsync();
 
         // Mapeamento de Saída: Model -> DTO
@@ -110,7 +110,7 @@ public class ProdutosController : ControllerBase
         var produto = await _context.Produtos.FindAsync(id);
         if (produto == null) return NotFound();
 
-        // Atualizamos o Model existente com os dados novos do DTO
+        // Atualiza o Model existente com os dados novos do DTO
         produto.Nome = dto.Nome;
         produto.Descricao = dto.Descricao;
         produto.Preco = dto.Preco;
@@ -126,7 +126,7 @@ public class ProdutosController : ControllerBase
             else throw;
         }
 
-        return NoContent(); // 204 NoContent é o padrão de sucesso para PUT
+        return NoContent(); // 204 NoContent
     }
 
     // DELETE - Remove do banco
@@ -140,6 +140,6 @@ public class ProdutosController : ControllerBase
         _context.Produtos.Remove(produto);
         await _context.SaveChangesAsync();
 
-        return NoContent(); // 204 NoContent é o padrão de sucesso para DELETE
+        return NoContent(); // 204 NoContent
     }
 }

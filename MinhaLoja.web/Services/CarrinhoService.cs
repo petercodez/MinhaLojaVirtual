@@ -8,7 +8,7 @@ public class CarrinhoService
     private readonly ILocalStorageService _localStorage;
     private const string CartKey = "carrinho_compras";
 
-    // Esse evento é o "alarme" que vai fazer o numerozinho amarelo no menu superior atualizar sozinho
+    // "Alarme" que vai fazer o numero amarelo no menu superior atualizar sozinho
     public event Action? OnChange;
 
     public CarrinhoService(ILocalStorageService localStorage)
@@ -47,7 +47,7 @@ public class CarrinhoService
             carrinho.Remove(itemARemover);
             await _localStorage.SetItemAsync(CartKey, carrinho);
             
-            // 4. Dispara o alarme para o NavMenu atualizar o numerozinho amarelo lá em cima!
+            // 4. Dispara o alarme para o NavMenu atualizar o numero amarelo
             OnChange?.Invoke(); 
         }
     }

@@ -75,7 +75,7 @@
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         
-        // Proteção: Se for anônimo, chuta para o login
+        // Se estiver anônimo, redirecionar para login
         if (authState.User.Identity is null || !authState.User.Identity.IsAuthenticated)
         {
             Navigation.NavigateTo("/login");

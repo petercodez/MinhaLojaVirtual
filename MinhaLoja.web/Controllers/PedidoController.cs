@@ -27,7 +27,7 @@ public class PedidoController : ControllerBase
         var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (usuarioId == null) return Unauthorized();
 
-        // 2. Procura a ficha de Cliente desse usuário para amarrar no seu Pedido.ClienteId
+        // 2. Procura a ficha de Cliente desse usuário para amarrar no Pedido.ClienteId
         var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
         if (cliente == null) 
             return BadRequest(new { Mensagem = "Ficha de cliente não encontrada." });
@@ -40,18 +40,18 @@ public class PedidoController : ControllerBase
             .Where(p => dto.ProdutoIds.Contains(p.Id))
             .ToListAsync();
 
-        // 4. Instancia a sua classe Pedido
+        // 4. Instancia a classe Pedido
         var novoPedido = new Pedido
         {
-            ClienteId = cliente.Id, // Usa a chave estrangeira perfeita que você criou
+            ClienteId = cliente.Id, // Usa a chave estrangeira
             DataPedido = DateTime.UtcNow,
-            Status = StatusPedido.AguardadoPagamento, // Usa o seu Enum!
+            Status = StatusPedido.AguardadoPagamento, // Usa o Enum
             Itens = new List<PedidoItem>()
         };
 
         decimal totalDoPedido = 0;
 
-        // 5. Preenche os itens do pedido (Sua classe PedidoItem)
+        // 5. Preenche os itens do pedido (classe PedidoItem)
         foreach (var id in dto.ProdutoIds)
         {
             var produtoReal = produtos.FirstOrDefault(p => p.Id == id);
@@ -70,7 +70,7 @@ public class PedidoController : ControllerBase
 
         novoPedido.ValorTotal = totalDoPedido;
 
-        // 6. Grava no PostgreSQL!
+        // 6. Grava no PostgreSQL
         _context.Pedidos.Add(novoPedido);
         await _context.SaveChangesAsync();
 
@@ -93,13 +93,13 @@ public class PedidoController : ControllerBase
             .Include(p => p.Itens)
                 .ThenInclude(i => i.Produto) // Faz o JOIN com a tabela de Produtos para pegar o Nome
             .Where(p => p.ClienteId == cliente.Id)
-            .OrderByDescending(p => p.DataPedido) // Os mais recentes aparecem primeiro!
+            .OrderByDescending(p => p.DataPedido) // Os mais recentes aparecem primeiro
             .Select(p => new PedidoReadDTO
             {
                 Id = p.Id,
                 DataPedido = p.DataPedido,
                 ValorTotal = p.ValorTotal,
-                Status = p.Status.ToString(), // Converte o seu Enum para texto
+                Status = p.Status.ToString(), // Converte o Enum para texto
                 Itens = p.Itens.Select(i => new ItemPedidoReadDTO
                 {
                     NomeProduto = i.Produto.Nome,

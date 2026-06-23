@@ -22,7 +22,7 @@ namespace MinhaLoja.web.Services
         // Método que vai ser chamado pela tela de Login
         public async Task<bool> LoginAsync(LoginDTO loginDto)
         {
-            // Bate na API de login que criada
+            // Bate na API de login
             var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginDto);
 
             // Se a API retornar 200 OK

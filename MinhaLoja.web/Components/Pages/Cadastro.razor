@@ -56,7 +56,7 @@
 </style>
 
 @code {
-    // Essa classe espelha os dados que a sua API espera receber
+    // Essa classe espelha os dados que a API espera receber
     public class RegistroViewModel 
     {
         public string Email { get; set; } = string.Empty;
@@ -70,12 +70,12 @@
     {
         try
         {
-            // Dispara o POST invisível para a sua API, igual o Swagger faria
+            // Dispara o POST invisível para a API, igual o Swagger faria
             var response = await Http.PostAsJsonAsync("api/Auth/registrar", registro);
             
             if (response.IsSuccessStatusCode)
             {
-                // Deu certo! Manda o usuário pra tela de login
+                // Deu certo: Manda o usuário pra tela de login
                 Navigation.NavigateTo("/login");
             }
             else

@@ -9,7 +9,7 @@ using MinhaLoja.Core.Models;
 
 namespace MinhaLoja.Core.Data;
 
-// O segredo está aqui: herdar de DbContext
+// Herdar de DbContext
 public class AppDbContext : IdentityDbContext<IdentityUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
